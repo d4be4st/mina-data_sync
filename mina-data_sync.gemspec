@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["d4be4st@gmail.com"]
   spec.summary       = "Summary"
   spec.description   = "Description"
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/d4be4st/mina-data_sync"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
