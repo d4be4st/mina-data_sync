@@ -1,39 +1,46 @@
-default: &default
-  adapter: postgresql
+# MySQL.  Versions 4.1 and 5.0 are recommended.
+#
+# Install the MYSQL driver
+#   gem install mysql2
+#
+# Ensure the MySQL gem is defined in your Gemfile
+#   gem 'mysql2'
+#
+# And be sure to use new-style password hashing:
+#   http://dev.mysql.com/doc/refman/5.0/en/old-client.html
+development:
+  adapter: mysql2
   encoding: utf8
+  database: psylog_development
   pool: 5
-  username: postgres
+  username: root
   password:
-  host: localhost
 
-rakovac: &rakovac
-  <<: *default
-  username: <%= ENV['PGSQL_USER'] %>
-  password: <%= ENV['PGSQL_PASSWORD'] %>
-  host: <%= ENV['PGSQL_HOST'] %>
-  port: <%= ENV['PGSQL_PORT'] %>
-
-# development:
-#   adapter: mysql2
-#   encoding: utf8
-#   database: miramo_club_development
-#   pool: 5
-#   username: root
-#   password:
-#   host: localhost
-
-development: &development
-  <<: *default
-  database: miramo_club_development
-
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
 test:
-  <<: *default
-  database: miramo_club_test
+  adapter: mysql2
+  encoding: utf8
+  database: psylog_test
+  pool: 5
+  username: root
+  password:
 
-production: &production
-  <<: *rakovac
-  database: miramo_infinum_co
+production:
+  host: localhost
+  adapter: mysql2
+  encoding: utf8
+  database: psylog_infinum_co
+  pool: 5
+  username: psylog_p
+  password: DzmKmmMw
 
 staging:
-  <<: *rakovac
-  database: miramo_staging_infinum_co
+  host: localhost
+  adapter: mysql2
+  encoding: utf8
+  database: psylog_staging_infinum_co
+  pool: 5
+  username: psylog_s
+  password: uRfbBD1S

@@ -1,0 +1,39 @@
+default: &default
+  adapter: postgresql
+  encoding: utf8
+  pool: 5
+  username: postgres
+  password:
+  host: localhost
+
+rakovac: &rakovac
+  <<: *default
+  username: <%= ENV['PGSQL_USER'] %>
+  password: <%= ENV['PGSQL_PASSWORD'] %>
+  host: <%= ENV['PGSQL_HOST'] %>
+  port: <%= ENV['PGSQL_PORT'] %>
+
+# development:
+#   adapter: mysql2
+#   encoding: utf8
+#   database: miramo_club_development
+#   pool: 5
+#   username: root
+#   password:
+#   host: localhost
+
+development: &development
+  <<: *default
+  database: miramo_club_development
+
+test:
+  <<: *default
+  database: miramo_club_test
+
+production: &production
+  <<: *rakovac
+  database: miramo_infinum_co
+
+staging:
+  <<: *rakovac
+  database: miramo_staging_infinum_co

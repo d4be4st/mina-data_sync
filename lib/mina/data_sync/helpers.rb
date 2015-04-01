@@ -1,4 +1,4 @@
-DC = <<-RUBY
+ARGUMENTS = <<-RUBY
   dc = YAML.load(ERB.new(File.read(ARGV[0])).result)[ARGV[1]]
   adapter = dc["adapter"]
   database = dc["database"]
@@ -13,58 +13,47 @@ DC = <<-RUBY
     arguments += " -h " + host if host
     arguments += " -U " + username if username
     arguments += " -p " + port.to_s if port
-    puts arguments
+  when "mysql2"
+    arguments += " " + database if database
+    arguments += " -h " + host if host
+    arguments += " -u " + username if username
+    arguments += " --password=" + password if password
+    arguments += " -P " + port.to_s if port
   end
+  puts arguments
 RUBY
 
-DATABASE_CONF = <<-BASH
-  function database_conf {
-    ruby -ryaml -rerb -e '#{DC}' "$@"
+CONF = <<-BASH
+  function conf {
+    ruby -ryaml -rerb -e '#{ARGUMENTS}' "$@"
   };
 BASH
 
-# module Mina
-#   module DataSync
-#     class Base
-#       def initialize(database_path, rails_env, deploy_to, tar)
-#         @database_conf = YAML.load(ERB.new(File.read(database_path)).result)[rails_env]
-#         @tar = tar
-#         @deploy_to = deploy_to
-#       end
+def read_conf(path, rails_env)
+  @conf ||= YAML.load(ERB.new(File.read(path)).result)[rails_env]
+end
 
-#       def database
-#         @database_conf['database']
-#       end
+def backup_file
+  "#{@conf['database']}-#{Date.today}.sql"
+end
 
-#       def host
-#         @database_conf['host']
-#       end
+def dump
+  case @conf['adapter']
+  when 'postgresql' then 'pg_dump'
+  when 'mysql2' then 'mysqldump'
+  end
+end
 
-#       def username
-#         @database_conf['username']
-#       end
+def restore
+  case @conf['adapter']
+  when 'postgresql' then 'psql -q'
+  when 'mysql2' then 'mysql --verbose'
+  end
+end
 
-#       def port
-#         @database_conf['port']
-#       end
-
-#       def file_sql
-#         @file_sql ||= "backup-#{Date.today}.sql"
-#       end
-
-#       def file_tar
-#         @file_tar ||= "backup-#{Date.today}.tar"
-#       end
-
-#       def file
-#         @tar ? file_tar : file_sql
-#       end
-
-#       def options
-#         options = "-O -a"
-#         options += ' -Ft' if @tar
-#         options
-#       end
-#     end
-#   end
-# end
+def options
+  case @conf['adapter']
+  when 'postgresql' then '-O -c'
+  when 'mysql2' then ''
+  end
+end

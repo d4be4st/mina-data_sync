@@ -1,39 +1,43 @@
 namespace :data_sync do
   set :term_mode, :pretty
 
-  desc "pull"
-  task :pg_pull => :environment do
+  task setup_sync: :environment do
+    read_conf(database_path, rails_env)
+  end
+
+  task pull: :setup_sync do
     queue "echo '-----> Dumping database'"
-    queue "#{DATABASE_CONF}"
     queue "cd #{deploy_to}/#{current_path}"
-    queue "ARGS=$(database_conf #{database_path} #{rails_env})"
-    queue! "pg_dump $ARGS #{pg_options} > #{backup_file}"
+    queue! "#{CONF}"
+    queue! "ARGS=$(conf #{database_path} #{rails_env})"
+    queue "mkdir -p #{remote_backup_path}"
+    queue! "#{dump} $ARGS #{options} > #{remote_backup_path}/#{backup_file}"
 
     to :after_hook do
       queue "echo '-----> Copying backup'"
-      queue "#{DATABASE_CONF}"
-      queue "ARGS=$(database_conf #{database_path} development)"
-      queue! "scp -P #{port} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{backup_file} #{backup_path}/#{backup_file}"
+      queue "#{CONF}"
+      queue "ARGS=$(conf #{database_path} development)"
+      queue "mkdir -p #{local_backup_path}"
+      queue! "scp -P #{port} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file} #{local_backup_path}/#{backup_file}"
       queue "echo '-----> Restoring database'"
-      queue! "pg_restore $ARGS #{pg_options} #{backup_path}/#{backup_file}"
+      queue! "#{restore} $ARGS < #{local_backup_path}/#{backup_file}"
     end
   end
 
-  desc "push"
-  task :pg_push => :environment do
+  task push: :setup_sync do
     to :before_hook do
-      queue "#{DATABASE_CONF}"
+      queue "#{CONF}"
       queue "echo '-----> Dumping database'"
-      queue "ARGS=$(database_conf #{database_path} development)"
-      queue! "pg_dump $ARGS #{pg_options} > #{backup_file}"
+      queue "ARGS=$(conf #{database_path} development)"
+      queue! "#{dump} $ARGS #{options} > #{local_backup_path}/#{backup_file}"
       queue "echo '-----> Copying backup'"
-      queue! "scp -P #{port} #{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{backup_file}"
+      queue! "scp -P #{port} #{local_backup_path}#{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
     end
 
     queue "echo '-----> Restoring database'"
-    queue "#{DATABASE_CONF}"
     queue "cd #{deploy_to}/#{current_path}"
-    queue "ARGS=$(database_conf #{database_path} #{rails_env})"
-    queue! "pg_restore $ARGS #{pg_options} #{backup_file}"
+    queue "#{CONF}"
+    queue "ARGS=$(conf #{database_path} #{rails_env})"
+    queue! "#{restore} $ARGS <  #{remote_backup_file}/#{backup_file}"
   end
 end
