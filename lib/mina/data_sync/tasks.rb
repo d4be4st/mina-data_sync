@@ -33,7 +33,7 @@ namespace :data_sync do
       queue "ARGS=$(conf #{database_path} development)"
       queue! "#{dump} $ARGS #{options} > #{local_backup_path}/#{backup_file}"
       queue "echo '-----> Copying backup'"
-      queue! "scp -P #{port} #{local_backup_path}#{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
+      queue! "scp -P #{port} #{local_backup_path}/#{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
     end
 
     if restore_data == 'true'
