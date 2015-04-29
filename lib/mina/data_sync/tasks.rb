@@ -24,7 +24,7 @@ namespace :data_sync do
         queue! "#{restore} $ARGS < #{local_backup_path}/#{backup_file}"
       end
     end
-  end2
+  end
 
   task push: :setup_sync do
     to :before_hook do
