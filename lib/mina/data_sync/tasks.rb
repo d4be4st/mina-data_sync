@@ -16,7 +16,7 @@ namespace :data_sync do
     to :after_hook do
       queue "echo '-----> Copying backup'"
       queue "mkdir -p #{local_backup_path}"
-      queue! "scp -P #{port} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file} #{local_backup_path}/#{backup_file}"
+      queue! "rsync --progress -e 'ssh -p #{port}' #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file} #{local_backup_path}/#{backup_file}"
       queue "echo '-----> Restoring database'"
       if restore_data == 'true'
         queue "#{CONF}"
@@ -24,7 +24,7 @@ namespace :data_sync do
         queue! "#{restore} $ARGS < #{local_backup_path}/#{backup_file}"
       end
     end
-  end
+  end2
 
   task push: :setup_sync do
     to :before_hook do
@@ -33,7 +33,7 @@ namespace :data_sync do
       queue "ARGS=$(conf #{database_path} development)"
       queue! "#{dump} $ARGS #{options} > #{local_backup_path}/#{backup_file}"
       queue "echo '-----> Copying backup'"
-      queue! "scp -P #{port} #{local_backup_path}/#{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
+      queue! "rsync --progress -e 'ssh -p #{port}' #{local_backup_path}/#{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
     end
 
     if restore_data == 'true'
@@ -41,7 +41,7 @@ namespace :data_sync do
       queue "cd #{deploy_to}/#{current_path}"
       queue "#{CONF}"
       queue "ARGS=$(conf #{database_path} #{rails_env})"
-      queue! "#{restore} $ARGS <  #{remote_backup_file}/#{backup_file}"
+      queue! "#{restore} $ARGS <  #{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
     end
   end
 end
