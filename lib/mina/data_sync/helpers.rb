@@ -47,7 +47,7 @@ end
 def restore
   case @conf['adapter']
   when 'postgresql' then 'psql -q'
-  when 'mysql2' then 'mysql --verbose'
+  when 'mysql2' then 'mysql'
   end
 end
 
