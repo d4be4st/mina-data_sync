@@ -1,13 +1,19 @@
 # Mina::DataSync
 
-TODO: Write a gem description
+You can sync your production and local database
+
+## Requirements
+
+* `rsync`
+* `mina` (Duh)
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'mina-data_sync'
+gem 'mina', require: false
+gem 'mina-data_sync', require: false
 ```
 
 And then execute:
@@ -20,7 +26,21 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+mina data_sync:pull # pulls remote to local
+mina data_sync:push # pushes local to remote
+```
+
+## Configruation
+
+configurable variables with defaults
+```ruby
+set :database_path, "config/database.yml"
+set :remote_backup_path, 'tmp'
+set :local_backup_path, -> { ENV['DATA_SYNC_BACKUP_PATH'] || 'tmp' }
+# if false will only make a dump and copy it without doing restore
+set :restore_data, -> { ENV['restore'] || 'true' }
+```
 
 ## Contributing
 
