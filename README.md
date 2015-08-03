@@ -23,6 +23,13 @@ And then execute:
 Or install it yourself as:
 
     $ gem install mina-data_sync
+    
+Require it in your deploy script:
+
+```ruby
+# config/deploy.rb
+require 'mina/data_sync'
+```
 
 ## Usage
 
