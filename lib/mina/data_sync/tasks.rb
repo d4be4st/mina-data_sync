@@ -1,16 +1,17 @@
 namespace :data_sync do
-  set :term_mode, :pretty
-
   task setup_sync: :environment do
     read_conf(database_path, rails_env)
   end
 
   task pull: :setup_sync do
+    set :term_mode, :pretty
+
     queue "echo '-----> Dumping database'"
     queue "cd #{deploy_to}/#{current_path}"
     queue "#{CONF}"
     queue "ARGS=$(conf #{database_path} #{rails_env})"
     queue "mkdir -p #{remote_backup_path}"
+    queue! "echo $ARGS"
     queue! "#{dump} $ARGS #{options} > #{remote_backup_path}/#{backup_file}"
 
     to :after_hook do
@@ -27,6 +28,8 @@ namespace :data_sync do
   end
 
   task push: :setup_sync do
+    set :term_mode, :pretty
+    
     to :before_hook do
       queue "echo '-----> Dumping database'"
       queue "#{CONF}"
