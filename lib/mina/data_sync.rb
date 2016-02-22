@@ -7,13 +7,5 @@ require 'mina/data_sync/tasks'
 
 module Mina
   module DataSync
-    if defined? Rails::Railtie
-      require 'rails'
-      class Railtie < Rails::Railtie
-        rake_tasks do
-          load 'tasks/config.rake'
-        end
-      end
-    end
   end
 end

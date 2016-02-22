@@ -1,28 +1,45 @@
-def read_conf(path, rails_env)
-  @conf ||= YAML.load(ERB.new(File.read(path)).result)[rails_env]
+COMMAND = <<-RUBY
+  method = ARGV[0]
+  dc = JSON.parse(ARGV[2])
+  adapter = dc["adapter"]
+  database = dc["database"]
+  host = dc["host"]
+  username = dc["username"]
+  password = dc["password"]
+  port = dc["port"]
+  arguments = ""
+  case adapter.to_s
+  when "postgresql"
+    arguments += "PGPASSWORD=" + password if password
+    arguments += method == "dump" ? "pg_dump" : "psql -q"
+    arguments += " -d " + database if database
+    arguments += " -h " + host if host
+    arguments += " -U " + username if username
+    arguments += " -p " + port.to_s if port
+    arguments += " -O -c"
+  when "mysql2"
+    arguments += method == "dump" ? "mysqldump" : "mysql"
+    arguments += " " + database if database
+    arguments += " -h " + host if host
+    arguments += " -u " + username if username
+    arguments += " --password=" + password if password
+    arguments += " -P " + port.to_s if port
+  end
+  arguments += method == "dump" ? " > " : " < "
+  arguments += ARGV[1]
+  puts arguments
+RUBY
+
+DATA_SYNC = <<-BASH
+  function data_sync {
+    ruby -rjson -e '#{COMMAND}' "$@"
+  };
+BASH
+
+def config
+  "#{rails} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json'"
 end
 
 def backup_file
-  "#{@conf['database']}-#{Date.today}.sql"
-end
-
-def dump
-  case @conf['adapter']
-  when 'postgresql' then 'pg_dump'
-  when 'mysql2' then 'mysqldump'
-  end
-end
-
-def restore
-  case @conf['adapter']
-  when 'postgresql' then 'psql -q'
-  when 'mysql2' then 'mysql'
-  end
-end
-
-def options
-  case @conf['adapter']
-  when 'postgresql' then '-O -c'
-  when 'mysql2' then ''
-  end
+  "#{repository.split('/').last.split('.').first}-#{rails_env}-#{Date.today}.sql"
 end
