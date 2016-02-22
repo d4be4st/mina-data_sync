@@ -8,10 +8,9 @@ namespace :data_sync do
 
     queue "echo '-----> Dumping database'"
     queue "cd #{deploy_to}/#{current_path}"
-    queue "#{CONF}"
-    queue "ARGS=$(conf #{database_path} #{rails_env})"
+    queue "ARGS=$(#{rake} mina_data_sync:config)"
     queue "mkdir -p #{remote_backup_path}"
-    queue! "echo $ARGS"
+    queue! 'echo $ARGS'
     queue! "#{dump} $ARGS #{options} > #{remote_backup_path}/#{backup_file}"
 
     to :after_hook do
@@ -20,8 +19,8 @@ namespace :data_sync do
       queue! "rsync --progress -e 'ssh -p #{port}' #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file} #{local_backup_path}/#{backup_file}"
       queue "echo '-----> Restoring database'"
       if restore_data == 'true'
-        queue "#{CONF}"
-        queue "ARGS=$(conf #{database_path} development)"
+        queue "ARGS=$(#{rake} mina_data_sync:config)"
+        queue! 'echo $ARGS'
         queue! "#{restore} $ARGS < #{local_backup_path}/#{backup_file}"
       end
     end
@@ -29,10 +28,9 @@ namespace :data_sync do
 
   task push: :setup_sync do
     set :term_mode, :pretty
-    
+
     to :before_hook do
       queue "echo '-----> Dumping database'"
-      queue "#{CONF}"
       queue "ARGS=$(conf #{database_path} development)"
       queue! "#{dump} $ARGS #{options} > #{local_backup_path}/#{backup_file}"
       queue "echo '-----> Copying backup'"
@@ -42,7 +40,6 @@ namespace :data_sync do
     if restore_data == 'true'
       queue "echo '-----> Restoring database'"
       queue "cd #{deploy_to}/#{current_path}"
-      queue "#{CONF}"
       queue "ARGS=$(conf #{database_path} #{rails_env})"
       queue! "#{restore} $ARGS <  #{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
     end

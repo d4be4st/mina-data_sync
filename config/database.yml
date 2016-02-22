@@ -11,7 +11,7 @@
 development:
   adapter: mysql2
   encoding: utf8
-  database: psylog_development
+  database: test
   pool: 5
   username: root
   password:
