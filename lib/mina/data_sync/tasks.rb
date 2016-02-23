@@ -21,7 +21,7 @@ namespace :data_sync do
       if restore_data == 'true'
         queue "echo '-----> Restoring database'"
         queue "CONFIG=$(#{rails} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-        queue %(data_sync "restore" "#{local_backup_path}/#{backup_file}" "$CONFIG")
+        queue %(eval $(data_sync "restore" "#{local_backup_path}/#{backup_file}" "$CONFIG"))
       end
     end
   end
@@ -42,7 +42,7 @@ namespace :data_sync do
       queue "echo '-----> Restoring database'"
       queue "cd #{deploy_to}/#{current_path}"
       queue "CONFIG=$(#{rails} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-      queue %(data_sync "restore" "#{remote_backup_path}/#{backup_file}" "$CONFIG")
+      queue %(eval $(data_sync "restore" "#{remote_backup_path}/#{backup_file}" "$CONFIG"))
     end
   end
 end
