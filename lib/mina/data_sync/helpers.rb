@@ -10,7 +10,7 @@ COMMAND = <<-RUBY
   arguments = ""
   case adapter.to_s
   when "postgresql"
-    arguments += "PGPASSWORD=\"" + password + "\" " if password
+    arguments += "PGPASSWORD=\\"" + password + "\\" " if password
     arguments += method == "dump" ? "pg_dump" : "psql -q"
     arguments += " -d " + database if database
     arguments += " -h " + host if host
