@@ -23,7 +23,7 @@ And then execute:
 Or install it yourself as:
 
     $ gem install mina-data_sync
-    
+
 Require it in your deploy script:
 
 ```ruby
@@ -45,8 +45,8 @@ configurable variables with defaults
 set :database_path, "config/database.yml"
 set :remote_backup_path, 'tmp'
 set :local_backup_path, -> { ENV['DATA_SYNC_BACKUP_PATH'] || 'tmp' }
-# if false will only make a dump and copy it without doing restore
-set :restore_data, -> { ENV['restore'] || 'true' }
+set :restore_data, -> { ENV['restore'] || 'true' } # if false will not restore backup
+set :dump_data, -> { ENV['dump'] || 'true' } # if false will not dump and copy backup
 ```
 
 ## Contributing
