@@ -20,11 +20,11 @@ namespace :data_sync do
       if dump_data == 'true'
         queue "echo '-----> Copying backup'"
         queue "mkdir -p #{local_backup_path}"
-        queue "#{DATA_SYNC}"
         queue "rsync --progress -e 'ssh -p #{port}' #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file} #{local_backup_path}/#{backup_file}"
       end
       if restore_data == 'true'
         queue "echo '-----> Restoring database'"
+        queue "#{DATA_SYNC}"
         queue "CONFIG=$(RAILS_ENV=development #{bundle_bin} exec rails runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
         queue %(data_sync "restore" "#{local_backup_path}/#{backup_file}" "$CONFIG")
         queue %(eval $(data_sync "restore" "#{local_backup_path}/#{backup_file}" "$CONFIG"))
