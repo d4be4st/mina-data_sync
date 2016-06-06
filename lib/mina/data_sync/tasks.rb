@@ -33,27 +33,31 @@ namespace :data_sync do
   end
 
   task push: :setup_sync do
-    set :term_mode, :pretty
+    if disallow_pushing
+      puts "Set `disallow_pushing` option to `true` in your config file."
+    else
+      set :term_mode, :pretty
 
-    to :before_hook do
-      if dump_data == 'true'
-        queue "echo '-----> Dumping database'"
-        queue "#{DATA_SYNC}"
-        queue "CONFIG=$(RAILS_ENV=development #{bundle_bin} exec rails runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-        queue %(data_sync "dump" "#{local_backup_path}/#{backup_file}" "$CONFIG")
-        queue %(eval $(data_sync "dump" "#{local_backup_path}/#{backup_file}" "$CONFIG"))
-        queue "echo '-----> Copying backup'"
-        queue "rsync --progress -e 'ssh -p #{port}' #{local_backup_path}/#{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
+      to :before_hook do
+        if dump_data == 'true'
+          queue "echo '-----> Dumping database'"
+          queue "#{DATA_SYNC}"
+          queue "CONFIG=$(RAILS_ENV=development #{bundle_bin} exec rails runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
+          queue %(data_sync "dump" "#{local_backup_path}/#{backup_file}" "$CONFIG")
+          queue %(eval $(data_sync "dump" "#{local_backup_path}/#{backup_file}" "$CONFIG"))
+          queue "echo '-----> Copying backup'"
+          queue "rsync --progress -e 'ssh -p #{port}' #{local_backup_path}/#{backup_file} #{user}@#{domain}:#{deploy_to}/#{current_path}/#{remote_backup_path}/#{backup_file}"
+        end
       end
-    end
 
-    if restore_data == 'true'
-      queue "echo '-----> Restoring database'"
-      queue "cd #{deploy_to}/#{current_path}"
-      queue "#{DATA_SYNC}"
-      queue "CONFIG=$(#{rails} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-      queue %(data_sync "restore" "#{remote_backup_path}/#{backup_file}" "$CONFIG")
-      queue %(eval $(data_sync "restore" "#{remote_backup_path}/#{backup_file}" "$CONFIG"))
+      if restore_data == 'true'
+        queue "echo '-----> Restoring database'"
+        queue "cd #{deploy_to}/#{current_path}"
+        queue "#{DATA_SYNC}"
+        queue "CONFIG=$(#{rails} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
+        queue %(data_sync "restore" "#{remote_backup_path}/#{backup_file}" "$CONFIG")
+        queue %(eval $(data_sync "restore" "#{remote_backup_path}/#{backup_file}" "$CONFIG"))
+      end
     end
   end
 end
