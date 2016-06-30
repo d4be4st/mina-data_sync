@@ -37,9 +37,9 @@ DATA_SYNC = <<-BASH
 BASH
 
 def config
-  "#{rails} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json'"
+  "#{fetch(:rails)} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json'"
 end
 
 def backup_file
-  "#{repository.split('/').last.split('.').first}-#{rails_env}-#{Date.today}.sql"
+  "#{fetch(:repository).split('/').last.split('.').first}-#{fetch(:rails_env)}-#{Date.today}.sql"
 end
