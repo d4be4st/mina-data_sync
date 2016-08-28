@@ -38,6 +38,17 @@ mina data_sync:pull # pulls remote to local
 mina data_sync:push # pushes local to remote
 ```
 
+You can use the only parts of the sync:
+
+``` ruby
+mina data_sync:dump_remote
+mina data_sync:dump_local
+mina data_sync:copy_local_to_remote
+mina data_sync:copy_remote_to_local
+mina data_sync:restore_remote
+mina data_sync:restore_local
+```
+
 ## Configruation
 
 configurable variables with defaults
@@ -45,8 +56,7 @@ configurable variables with defaults
 set :database_path, "config/database.yml"
 set :remote_backup_path, 'tmp'
 set :local_backup_path, -> { ENV['DATA_SYNC_BACKUP_PATH'] || 'tmp' }
-set :restore_data, -> { ENV['restore'] || 'true' } # if false will not restore backup
-set :dump_data, -> { ENV['dump'] || 'true' } # if false will not dump and copy backup
+set :backup_file, -> { %{#{fetch(:repository).split('/').last.split('.').first}-#{fetch(:rails_env)}-#{Date.today}.sql} }
 ```
 
 ## Contributing

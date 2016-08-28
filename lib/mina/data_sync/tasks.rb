@@ -1,11 +1,11 @@
 namespace :data_sync do
-  task :remote_dump do
+  task :dump_remote do
     run :remote do
       dump_restore(fetch(:current_path), fetch(:remote_backup_path), mode: :dump, backend: :remote)
     end
   end
 
-  task :local_dump do
+  task :dump_local do
     run :local do
       dump_restore('.', fetch(:local_backup_path), mode: :dump, backend: :local)
     end
@@ -19,27 +19,27 @@ namespace :data_sync do
     rsync_db(mode: :remote_to_local)
   end
 
-  task :remote_restore do
+  task :restore_remote do
     run :remote do
       dump_restore(fetch(:current_path), fetch(:remote_backup_path), mode: :restore, backend: :remote)
     end
   end
 
-  task :local_restore do
+  task :restore_local do
     run :local do
       dump_restore('.', fetch(:local_backup_path), mode: :restore, backend: :local)
     end
   end
 
   task :pull do
-    invoke :'data_sync:remote_dump'
+    invoke :'data_sync:dump_remote'
     invoke :'data_sync:copy_remote_to_local'
-    invoke :'data_sync:local_restore'
+    invoke :'data_sync:restore_local'
   end
 
   task :push do
-    invoke :'data_sync:local_dump'
+    invoke :'data_sync:dump_local'
     invoke :'data_sync:copy_local_to_remote'
-    invoke :'data_sync:remote_restore'
+    invoke :'data_sync:restore_remote'
   end
 end
