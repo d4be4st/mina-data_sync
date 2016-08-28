@@ -1,53 +1,45 @@
 namespace :data_sync do
-  task setup_sync: :environment do
-    read_conf(database_path, rails_env)
-  end
-
-  task pull: :setup_sync do
+  task :remote_dump do
     run :remote do
-      comment 'Dumping database'
-      command "cd #{fetch(:current_path)}"
-      command "#{DATA_SYNC}"
-      command "mkdir -p #{fetch(:remote_backup_path)}"
-      command "CONFIG=$(#{fetch(:rails)} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-      command %(data_sync "dump" "#{fetch(:remote_backup_path)}/#{fetch(:backup_file)}" "$CONFIG")
-      command %(eval $(data_sync "dump" "#{fetch(:remote_backup_path)}/#{fetch(:backup_file)}" "$CONFIG"))
-    end if fetch(:dump_data) == 'true'
-
-    run :local do
-      if fetch(:dump_data) == 'true'
-        comment 'Copying backup'
-        command "mkdir -p #{fetch(:local_backup_path)}"
-        command "rsync --progress -e 'ssh -p #{fetch(:port)}' #{fetch(:user)}@#{fetch(:domain)}:#{fetch(:current_path)}/#{fetch(:remote_backup_path)}/#{fetch(:backup_file)} #{fetch(:local_backup_path)}/#{fetch(:backup_file)}"
-      end
-      if fetch(:restore_data) == 'true'
-        comment 'Restoring database'
-        command "#{DATA_SYNC}"
-        command "CONFIG=$(RAILS_ENV=development #{fetch(:bundle_bin)} exec rails runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-        command %(data_sync "restore" "#{fetch(:local_backup_path)}/#{fetch(:backup_file)}" "$CONFIG")
-        command %(eval $(data_sync "restore" "#{fetch(:local_backup_path)}/#{fetch(:backup_file)}" "$CONFIG"))
-      end
+      dump_restore(fetch(:current_path), fetch(:remote_backup_path), mode: :dump, backend: :remote)
     end
   end
 
-  task push: :setup_sync do
+  task :local_dump do
     run :local do
-      comment 'Dumping database'
-      command "#{DATA_SYNC}"
-      command "CONFIG=$(RAILS_ENV=development #{fetch(:bundle_bin)} exec rails runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-      command %(data_sync "dump" "#{fetch(:local_backup_path)}/#{fetch(:backup_file)}" "$CONFIG")
-      command %(eval $(data_sync "dump" "#{fetch(:local_backup_path)}/#{fetch(:backup_file)}" "$CONFIG"))
-      comment 'Copying backup'
-      command "rsync --progress -e 'ssh -p #{fetch(:port)}' #{fetch(:local_backup_path)}/#{fetch(:backup_file)} #{fetch(:user)}@#{fetch(:domain)}:#{fetch(:current_path)}/#{fetch(:remote_backup_path)}/#{fetch(:backup_file)}"
-    end if fetch(:dump_data) == 'true'
+      dump_restore('.', fetch(:local_backup_path), mode: :dump, backend: :local)
+    end
+  end
 
+  task :copy_local_to_remote do
+    rsync_db(mode: :local_to_remote)
+  end
+
+  task :copy_remote_to_local do
+    rsync_db(mode: :remote_to_local)
+  end
+
+  task :remote_restore do
     run :remote do
-      comment 'Restoring database'
-      command "cd #{fetch(:current_path)}"
-      command "#{DATA_SYNC}"
-      command "CONFIG=$(#{fetch(:rails)} runner 'puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json')"
-      command %(data_sync "restore" "#{fetch(:remote_backup_path)}/#{fetch(:backup_file)}" "$CONFIG")
-      command %(eval $(data_sync "restore" "#{fetch(:remote_backup_path)}/#{fetch(:backup_file)}" "$CONFIG"))
-    end if fetch(:restore_data) == 'true'
+      dump_restore(fetch(:current_path), fetch(:remote_backup_path), mode: :restore, backend: :remote)
+    end
+  end
+
+  task :local_restore do
+    run :local do
+      dump_restore('.', fetch(:local_backup_path), mode: :restore, backend: :local)
+    end
+  end
+
+  task :pull do
+    invoke :'data_sync:remote_dump'
+    invoke :'data_sync:copy_remote_to_local'
+    invoke :'data_sync:local_restore'
+  end
+
+  task :push do
+    invoke :'data_sync:local_dump'
+    invoke :'data_sync:copy_local_to_remote'
+    invoke :'data_sync:remote_restore'
   end
 end
