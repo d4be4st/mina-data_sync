@@ -20,7 +20,7 @@ namespace :data_sync do
   end
 
   task :restore_remote do
-    exit unless TTY::Prompt.new.yes?("Are you sure you want to restore #{fetch(:rails_env)} database?")
+    exit unless TTY::Prompt.new.no?("Are you sure you want to restore #{fetch(:rails_env)} database?")
     run :remote do
       dump_restore(fetch(:current_path), fetch(:remote_backup_path), mode: :restore, backend: :remote)
     end
