@@ -23,5 +23,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "pry", "~> 0"
 
   spec.add_dependency 'mina', '~> 1.0.0'
-  spec.add_dependency 'tty-prompt'
+  spec.add_dependency 'tty-prompt', '~> 0.4.0'
 end
