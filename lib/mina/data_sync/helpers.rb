@@ -16,6 +16,7 @@ COMMAND = <<-RUBY
     arguments += " -h " + host if host
     arguments += " -U " + username if username
     arguments += " -p " + port.to_s if port
+    arguments += " --no-acl --no-owner "
     arguments += method == "dump" ? " -O -c" : ""
   when "mysql2"
     arguments += method == "dump" ? "mysqldump" : "mysql"
