@@ -9,7 +9,7 @@ COMMAND = <<-RUBY
   port = dc["port"]
   arguments = ""
   case adapter.to_s
-  when "postgresql"
+  when "postgresql", "postgis"
     arguments += "PGPASSWORD=\\"" + password + "\\" " if password
     arguments += method == "dump" ? "pg_dump" : "psql -q"
     arguments += " -d " + database if database
