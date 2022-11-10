@@ -41,7 +41,7 @@ def dump_restore(rails_root, backup_path, mode: :dump, backend: :local)
   command %{cd #{rails_root}}
   command DATA_SYNC.to_s
   command %{mkdir -p #{backup_path}}
-  command %{CONFIG=$(RAILS_ENV=#{backend == :local ? 'development' : fetch(:rails_env)} bundle exec rails runner "puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json")}
+  command %{CONFIG=$(RAILS_ENV=#{backend == :local ? 'development' : fetch(:rails_env)} bundle exec rails runner "puts ActiveRecord::Base.connection.instance_variable_get(:@config).to_json" | tail -1)}
   comment %{$(data_sync "#{mode}" "#{backup_path}/#{fetch(:backup_file)}" "$CONFIG")}
   command %{eval $(data_sync "#{mode}" "#{backup_path}/#{fetch(:backup_file)}" "$CONFIG")}
 end
